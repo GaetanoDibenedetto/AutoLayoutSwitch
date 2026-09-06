@@ -19,7 +19,7 @@ $DefaultLayoutTip = "0410:00000410"
 $DefaultLayoutHex = "00000410"
 
 # ----------------------------------------------------------------------------------
-# SCRIPT LOGIC (Do not edit below unless you know what you're doing)
+# SCRIPT LOGIC
 # ----------------------------------------------------------------------------------
 
 $code = @"
@@ -58,6 +58,30 @@ Write-Host "Event listeners registered. Script is sleeping efficiently."
 
 # Keep script alive and process events on the main thread to avoid memory corruption
 $isCurrentlyF108 = $null
+
+# --- INITIAL STATE CHECK ---
+$devices = Get-PnpDevice -Class Keyboard -Status OK -ErrorAction SilentlyContinue
+$isConnected = $false
+if ($devices) {
+    foreach ($dev in $devices) {
+        if ($dev.InstanceId -and $dev.InstanceId -match $TargetKeyboardHWID) {
+            $isConnected = $true
+            break
+        }
+    }
+}
+if ($isConnected) {
+    Write-Host "[$((Get-Date).ToString("yyyy-MM-dd HH:mm:ss"))] Initial state: F108 Pro connected. Switching layout to $F108LayoutTip"
+    Set-WinDefaultInputMethodOverride -InputTip $F108LayoutTip -ErrorAction SilentlyContinue
+    [KLSwitch]::SetLayout($F108LayoutHex)
+    $isCurrentlyF108 = $true
+} else {
+    Write-Host "[$((Get-Date).ToString("yyyy-MM-dd HH:mm:ss"))] Initial state: F108 Pro disconnected. Switching layout to $DefaultLayoutTip"
+    Set-WinDefaultInputMethodOverride -InputTip $DefaultLayoutTip -ErrorAction SilentlyContinue
+    [KLSwitch]::SetLayout($DefaultLayoutHex)
+    $isCurrentlyF108 = $false
+}
+# ---------------------------
 
 while($true) {
     $event = Wait-Event -Timeout 3600

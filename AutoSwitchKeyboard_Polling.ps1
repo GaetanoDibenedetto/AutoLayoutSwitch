@@ -21,17 +21,17 @@ using System;
 using System.Runtime.InteropServices;
 public class KLSwitch {
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+    public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
     [DllImport("user32.dll")]
     public static extern IntPtr LoadKeyboardLayout(string pwszKLID, uint Flags);
     
     public const int HWND_BROADCAST = 0xffff;
-    public const int WM_INPUTLANGCHANGEREQUEST = 0x0050;
+    public const uint WM_INPUTLANGCHANGEREQUEST = 0x0050;
     public const uint KLF_ACTIVATE = 1;
     
     public static void SetLayout(string langId) {
         IntPtr layout = LoadKeyboardLayout(langId, KLF_ACTIVATE);
-        PostMessage((IntPtr)HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, layout.ToInt32());
+        PostMessage((IntPtr)HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, IntPtr.Zero, layout);
     }
 }
 "@
